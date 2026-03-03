@@ -105,4 +105,31 @@ def extract_demo_account(transcript: str) -> dict:
     emergency_defs = extract_emergency_definition(transcript)
     memo["emergency_definition"] = emergency_defs
 
+        # --------- Explicit Unknown Handling --------- #
+
+    if not memo["emergency_routing_rules"]["primary_contact"]:
+        memo["questions_or_unknowns"].append(
+            "Emergency routing contact not specified during demo"
+        )
+
+    if not memo["non_emergency_routing_rules"]["primary_contact"]:
+        memo["questions_or_unknowns"].append(
+            "Non-emergency routing contact not specified during demo"
+        )
+
+    if not memo["call_transfer_rules"]["timeout_seconds"]:
+        memo["questions_or_unknowns"].append(
+            "Call transfer timeout not specified during demo"
+        )
+
+    if not memo["integration_constraints"]:
+        memo["questions_or_unknowns"].append(
+            "Integration constraints not specified during demo"
+        )
+
+    if not memo["office_address"]:
+        memo["questions_or_unknowns"].append(
+            "Office address not specified during demo"
+        )
+
     return memo
