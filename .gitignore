@@ -4,5 +4,3 @@ venv/
 .env
 .DS_Store
 outputs/*
-!outputs/accounts/
-!outputs/accounts/**/
