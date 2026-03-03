@@ -5,20 +5,21 @@ Pipeline A:
     Demo transcript -> v1 account memo + agent spec
 
 Pipeline B:
-    Onboarding transcript -> patch v1 -> v2 + changes log
+    Onboarding transcript -> patch base version -> v2 + changes log
 
 Idempotent:
     - Does not overwrite v1
+    - Uses v2 as base if available
     - Skips unchanged onboarding updates
 """
 
 import os
 
-from scripts.extract_demo import extract_demo_account
+from scripts.extract_demo import extract_demo_account, extract_company_name
 from scripts.extract_onboarding import extract_onboarding_updates
 from scripts.generate_agent import generate_agent_spec
 from scripts.patch_account import apply_onboarding_patch
-from scripts.utils import save_json, load_json
+from scripts.utils import save_json, load_json, generate_account_id
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -75,26 +76,28 @@ def process_onboarding_file(filepath: str):
         print(f"[SKIP] No updates detected in {os.path.basename(filepath)}")
         return
 
-    # Attempt to extract company name same way as demo
-    from scripts.extract_demo import extract_company_name
     company_name = extract_company_name(transcript)
 
     if not company_name:
         print("[ERROR] Company name not found in onboarding transcript.")
         return
 
-    from scripts.utils import generate_account_id
     account_id = generate_account_id(company_name)
 
-    v1_memo_path = os.path.join(OUTPUT_DIR, account_id, "v1", "account_memo.json")
+    v1_path = os.path.join(OUTPUT_DIR, account_id, "v1", "account_memo.json")
+    v2_path = os.path.join(OUTPUT_DIR, account_id, "v2", "account_memo.json")
 
-    v1_memo = load_json(v1_memo_path)
+    # Determine base version
+    if os.path.exists(v2_path):
+        base_memo = load_json(v2_path)
+    else:
+        base_memo = load_json(v1_path)
 
-    if not v1_memo:
-        print(f"[ERROR] No v1 found for account {account_id}")
+    if not base_memo:
+        print(f"[ERROR] No base version found for account {account_id}")
         return
 
-    v2_memo, changes = apply_onboarding_patch(v1_memo, updates)
+    updated_memo, changes = apply_onboarding_patch(base_memo, updates)
 
     if not changes:
         print(f"[SKIP] No changes detected for account {account_id}")
@@ -105,13 +108,13 @@ def process_onboarding_file(filepath: str):
     agent_path = os.path.join(v2_dir, "agent_spec.json")
     changes_path = os.path.join(OUTPUT_DIR, account_id, "changes.json")
 
-    agent_spec = generate_agent_spec(v2_memo)
+    agent_spec = generate_agent_spec(updated_memo)
 
-    save_json(memo_path, v2_memo)
+    save_json(memo_path, updated_memo)
     save_json(agent_path, agent_spec)
     save_json(changes_path, {"changes": changes})
 
-    print(f"[SUCCESS] Created v2 for account {account_id}")
+    print(f"[SUCCESS] Created/Updated v2 for account {account_id}")
 
 
 def run_onboarding_pipeline():
