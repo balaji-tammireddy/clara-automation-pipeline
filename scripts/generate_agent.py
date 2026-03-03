@@ -3,8 +3,18 @@ from scripts.schema import get_empty_agent_spec
 
 def build_system_prompt(memo: dict) -> str:
     company_name = memo.get("company_name", "the company")
-    business_hours = memo.get("business_hours", {})
-    timezone = business_hours.get("timezone")
+
+    bh = memo.get("business_hours", {})
+    days = bh.get("days") or "Not specified"
+    start = bh.get("start_time") or "Not specified"
+    end = bh.get("end_time") or "Not specified"
+    timezone = bh.get("timezone") or "Not specified"
+
+    emergency_defs = memo.get("emergency_definition") or []
+    emergency_text = ", ".join(emergency_defs) if emergency_defs else "Not specified"
+
+    integration_constraints = memo.get("integration_constraints") or []
+    integration_text = ", ".join(integration_constraints) if integration_constraints else "None specified"
 
     prompt = f"""
 You are Clara, the AI voice assistant for {company_name}.
@@ -39,10 +49,11 @@ AFTER HOURS FLOW:
 6. Ask if they need anything else.
 7. Close politely.
 
-Business hours: {business_hours}
-Timezone: {timezone}
-Emergency definition: {memo.get("emergency_definition")}
-Integration constraints: {memo.get("integration_constraints")}
+Operational Details:
+- Business Hours: {days}, {start} to {end}
+- Timezone: {timezone}
+- Emergency Definition: {emergency_text}
+- Integration Constraints: {integration_text}
 """
 
     return prompt.strip()
