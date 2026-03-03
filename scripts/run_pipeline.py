@@ -34,7 +34,12 @@ def process_demo_file(filepath: str):
     with open(filepath, "r", encoding="utf-8") as f:
         transcript = f.read()
 
-    memo = extract_demo_account(transcript)
+    try:
+        memo = extract_demo_account(transcript)
+    except Exception as e:
+        print(f"[ERROR] Failed to process demo file {os.path.basename(filepath)}: {e}")
+        return
+
     account_id = memo["account_id"]
 
     account_v1_dir = os.path.join(OUTPUT_DIR, account_id, "v1")
