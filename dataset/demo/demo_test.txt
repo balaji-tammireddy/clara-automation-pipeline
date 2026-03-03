@@ -1,0 +1,4 @@
+This is ACME Fire Protection.
+We handle sprinkler systems and fire alarm inspections.
+Our business hours are Monday to Friday 8 AM to 5 PM EST.
+Emergency means sprinkler leak or fire alarm triggered.
