@@ -1,3 +1,17 @@
+"""
+Main pipeline runner.
+
+Pipeline A:
+    Demo transcript -> v1 account memo + agent spec
+
+Pipeline B:
+    Onboarding transcript -> patch v1 -> v2 + changes log
+
+Idempotent:
+    - Does not overwrite v1
+    - Skips unchanged onboarding updates
+"""
+
 import os
 
 from scripts.extract_demo import extract_demo_account
